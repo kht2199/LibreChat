@@ -132,18 +132,16 @@ endpoints:
       baseURL: '${CUSTOM_API_BASE_URL}'     # Set in .env, e.g. http://localhost:8000/v1
       models:
         default:
-          - 'model-name-1'
-          - 'model-name-2'
-        fetch: false                         # Use defined list; don't call /models endpoint
+          - 'model-name-1'                  # Fallback shown before fetch completes
+        fetch: true                          # Dynamically fetch model list from GET /models
       titleConvo: true
-      titleModel: 'model-name-1'
       modelDisplayLabel: 'My API'
 ```
 
 **How auto-selection works:**
 - `getDefaultEndpoint()` checks: (1) conversation preset → (2) localStorage → (3) first entry in `endpointsConfig`
 - Since `custom` is the only entry in `endpointsConfig`, step 3 always picks it automatically
-- `models.fetch: false` ensures the model list comes entirely from `librechat.yaml`, not from the API
+- `models.fetch: true` fetches the model list from `GET {baseURL}/models` at startup; `default` acts as a fallback until the fetch completes
 
 The admin fills in actual values in `.env`; users never touch configuration.
 
