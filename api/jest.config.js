@@ -12,5 +12,6 @@ module.exports = {
     '^openid-client/passport$': '<rootDir>/test/__mocks__/openid-client-passport.js',
     '^openid-client$': '<rootDir>/test/__mocks__/openid-client.js',
   },
+  modulePaths: ['<rootDir>/../node_modules'],
   transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/).*/'],
 };
