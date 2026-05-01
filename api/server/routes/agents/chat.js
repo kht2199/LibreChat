@@ -53,11 +53,6 @@ router.post('/', controller);
  * @param {express.Response} res - The response object, used to send back a response.
  * @returns {void}
  */
-router.post('/:endpoint', (req, res, next) => {
-  if (req.params.endpoint !== 'custom') {
-    return res.status(403).json({ error: 'Endpoint not available' });
-  }
-  next();
-}, controller);
+router.post('/:endpoint', controller);
 
 module.exports = router;
