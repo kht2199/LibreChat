@@ -1,5 +1,4 @@
-import React, { useEffect, memo } from 'react';
-import TagManager from 'react-gtm-module';
+import React, { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Constants } from 'librechat-data-provider';
 import { useGetStartupConfig } from '~/data-provider';
@@ -32,15 +31,6 @@ function Footer({ className }: { className?: string }) {
         '](https://librechat.ai) - ' +
         localize('com_ui_latest_footer')
   ).split('|');
-
-  useEffect(() => {
-    if (config?.analyticsGtmId != null && typeof window.google_tag_manager === 'undefined') {
-      const tagManagerArgs = {
-        gtmId: config.analyticsGtmId,
-      };
-      TagManager.initialize(tagManagerArgs);
-    }
-  }, [config?.analyticsGtmId]);
 
   const mainContentRender = mainContentParts.map((text, index) => (
     <React.Fragment key={`main-content-part-${index}`}>

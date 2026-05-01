@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useRecoilState } from 'recoil';
-import TagManager from 'react-gtm-module';
 import { LocalStorageKeys, PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { TStartupConfig, TUser } from 'librechat-data-provider';
 import { useMCPToolsQuery, useMCPServersQuery } from '~/data-provider';
@@ -76,12 +75,4 @@ export default function useAppStartup({
     });
   }, [defaultPreset, setDefaultPreset, startupConfig?.modelSpecs?.list]);
 
-  useEffect(() => {
-    if (startupConfig?.analyticsGtmId != null && typeof window.google_tag_manager === 'undefined') {
-      const tagManagerArgs = {
-        gtmId: startupConfig.analyticsGtmId,
-      };
-      TagManager.initialize(tagManagerArgs);
-    }
-  }, [startupConfig?.analyticsGtmId]);
 }
