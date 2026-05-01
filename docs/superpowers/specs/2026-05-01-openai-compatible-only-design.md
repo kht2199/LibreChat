@@ -10,6 +10,8 @@
 - Enable only the `custom` endpoint (OpenAI-compatible, arbitrary `baseURL`)
 - Remove code that calls or enables external third-party services
 - Reduce bundle/code weight without introducing bugs
+- Pre-configure the endpoint at server level — users open the app and chat immediately
+- Users can change the **model** only; endpoint is fixed and invisible
 - Keep: chat, file upload, memory, MCP, local auth (email/password)
 - Keep: MongoDB (required — full data layer is Mongoose-based)
 
@@ -75,10 +77,10 @@ api/app/clients/tools/structured/FluxAPI.js
 - If a component renders only social buttons and nothing else, delete the component file
 
 #### 6. Endpoint selector UI
-Remove from the endpoint dropdown and related components:
-- `openAI`, `azureOpenAI`, `google`, `anthropic`, `bedrock`, `assistants`, `azureAssistants`, `agents`
-- Remove per-endpoint settings panel components (Anthropic settings, Google settings, etc.)
+- **Remove the endpoint dropdown entirely** — with only `custom` in `endpointsConfig`, `getDefaultEndpoint` automatically selects it; no selector needed
+- Remove per-endpoint settings panel components for all non-custom providers (Anthropic, Google, Bedrock, Azure, Assistants, Agents settings panels)
 - Remove model selector logic tied to removed endpoints
+- **Keep the model selector** — users can choose from the pre-defined model list configured in `librechat.yaml`
 
 #### 7. External tool UI
 - Remove Tavily, Traversaal, Flux tool entries from any tool selection UI
@@ -115,6 +117,35 @@ Remove from the endpoint dropdown and related components:
 2. **Types untouched** — never modify `EModelEndpoint`, shared schemas, or `data-provider` types
 3. **Leaf files only** — only delete files that are not imported by other files, or files whose import sites are also being cleaned up in the same change
 4. **No partial deletes** — if a file must stay for type reasons, leave it entirely; don't stub or gut it
+
+---
+
+## Server Default Configuration
+
+The `custom` endpoint is pre-configured in `librechat.yaml` so users open the app and start chatting immediately without any setup.
+
+```yaml
+endpoints:
+  custom:
+    - name: 'my-api'                        # Display name shown to users
+      apiKey: '${CUSTOM_API_KEY}'           # Set in .env
+      baseURL: '${CUSTOM_API_BASE_URL}'     # Set in .env, e.g. http://localhost:8000/v1
+      models:
+        default:
+          - 'model-name-1'
+          - 'model-name-2'
+        fetch: false                         # Use defined list; don't call /models endpoint
+      titleConvo: true
+      titleModel: 'model-name-1'
+      modelDisplayLabel: 'My API'
+```
+
+**How auto-selection works:**
+- `getDefaultEndpoint()` checks: (1) conversation preset → (2) localStorage → (3) first entry in `endpointsConfig`
+- Since `custom` is the only entry in `endpointsConfig`, step 3 always picks it automatically
+- `models.fetch: false` ensures the model list comes entirely from `librechat.yaml`, not from the API
+
+The admin fills in actual values in `.env`; users never touch configuration.
 
 ---
 
