@@ -28,13 +28,10 @@ const {
   GoogleSearchAPI,
   // Structured Tools
   DALLE3,
-  FluxAPI,
   OpenWeather,
   StructuredSD,
   StructuredACS,
-  TraversaalSearch,
   StructuredWolfram,
-  TavilySearchResults,
   createGeminiImageTool,
   createOpenAIImageTools,
 } = require('../');
@@ -173,15 +170,12 @@ const loadTools = async ({
   imageOutputType,
 }) => {
   const toolConstructors = {
-    flux: FluxAPI,
     calculator: Calculator,
     google: GoogleSearchAPI,
     open_weather: OpenWeather,
     wolfram: StructuredWolfram,
     'stable-diffusion': StructuredSD,
     'azure-ai-search': StructuredACS,
-    traversaal_search: TraversaalSearch,
-    tavily_search_results_json: TavilySearchResults,
   };
 
   const customConstructors = {
@@ -246,7 +240,6 @@ const loadTools = async ({
   };
 
   const toolOptions = {
-    flux: imageGenOptions,
     dalle: imageGenOptions,
     'stable-diffusion': imageGenOptions,
     gemini_image_gen: imageGenOptions,

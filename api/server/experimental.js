@@ -29,7 +29,6 @@ const { updateInterfacePermissions: updateInterfacePerms } = require('@librechat
 const { getRoleByName, updateAccessPermissions, seedDatabase } = require('~/models');
 const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
-const configureSocialLogins = require('./socialLogins');
 const { getAppConfig } = require('./services/Config');
 const staticCache = require('./utils/staticCache');
 const optionalJwtAuth = require('./middleware/optionalJwtAuth');
@@ -291,10 +290,6 @@ if (cluster.isMaster) {
     /** LDAP Auth */
     if (process.env.LDAP_URL && process.env.LDAP_USER_SEARCH_BASE) {
       passport.use(ldapLogin);
-    }
-
-    if (isEnabled(ALLOW_SOCIAL_LOGIN)) {
-      await configureSocialLogins(app);
     }
 
     /** Routes */

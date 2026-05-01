@@ -96,6 +96,14 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     endpointsConfig,
   });
 
+  const visibleEndpoints = useMemo(
+    () =>
+      mappedEndpoints.filter(
+        (ep) => ep.value === EModelEndpoint.custom || ep.value?.startsWith('custom:'),
+      ),
+    [mappedEndpoints],
+  );
+
   const getModelDisplayName = useCallback(
     (endpoint: Endpoint, model: string): string => {
       if (isAgentsEndpoint(endpoint.value)) {
@@ -160,9 +168,9 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     if (!searchValue) {
       return null;
     }
-    const allItems = [...modelSpecs, ...mappedEndpoints];
+    const allItems = [...modelSpecs, ...visibleEndpoints];
     return filterItems(allItems, searchValue, agentsMap, assistantsMap || {});
-  }, [searchValue, modelSpecs, mappedEndpoints, agentsMap, assistantsMap]);
+  }, [searchValue, modelSpecs, visibleEndpoints, agentsMap, assistantsMap]);
 
   const setDebouncedSearchValue = useMemo(
     () =>
@@ -249,7 +257,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       agentsMap,
       modelSpecs,
       assistantsMap,
-      mappedEndpoints,
+      mappedEndpoints: visibleEndpoints,
       endpointsConfig,
       handleSelectSpec,
       handleSelectModel,
@@ -268,7 +276,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       agentsMap,
       modelSpecs,
       assistantsMap,
-      mappedEndpoints,
+      visibleEndpoints,
       endpointsConfig,
       handleSelectSpec,
       handleSelectModel,

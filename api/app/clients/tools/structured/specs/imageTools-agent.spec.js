@@ -2,7 +2,7 @@
  * Regression tests for image tool agent mode — verifies that invoke() returns
  * a ToolMessage with base64 in artifact.content rather than serialized into content.
  *
- * Root cause: DALLE3/FluxAPI/StableDiffusion extend LangChain's Tool but did not
+ * Root cause: DALLE3/StableDiffusion extend LangChain's Tool but did not
  * set responseFormat = 'content_and_artifact'. LangChain's invoke() would then
  * JSON.stringify the entire [content, artifact] tuple into ToolMessage.content,
  * dumping base64 into token counting and causing context exhaustion.
@@ -11,16 +11,13 @@
 const axios = require('axios');
 const OpenAI = require('openai');
 const undici = require('undici');
-const fetch = require('node-fetch');
 const { ToolMessage } = require('@langchain/core/messages');
 const { ContentTypes } = require('librechat-data-provider');
 const StableDiffusionAPI = require('../StableDiffusion');
-const FluxAPI = require('../FluxAPI');
 const DALLE3 = require('../DALLE3');
 
 jest.mock('axios');
 jest.mock('openai');
-jest.mock('node-fetch');
 jest.mock('undici', () => ({
   ProxyAgent: jest.fn(),
   fetch: jest.fn(),
@@ -50,7 +47,7 @@ const makeToolCall = (name, args) => ({
 });
 
 describe('image tools - agent mode ToolMessage format', () => {
-  const ENV_KEYS = ['DALLE_API_KEY', 'FLUX_API_KEY', 'SD_WEBUI_URL', 'PROXY'];
+  const ENV_KEYS = ['DALLE_API_KEY', 'SD_WEBUI_URL', 'PROXY'];
   let savedEnv = {};
 
   beforeEach(() => {
@@ -59,7 +56,6 @@ describe('image tools - agent mode ToolMessage format', () => {
       savedEnv[key] = process.env[key];
     }
     process.env.DALLE_API_KEY = 'test-dalle-key';
-    process.env.FLUX_API_KEY = 'test-flux-key';
     process.env.SD_WEBUI_URL = 'http://localhost:7860';
     delete process.env.PROXY;
   });
@@ -137,95 +133,6 @@ describe('image tools - agent mode ToolMessage format', () => {
           style: 'vivid',
         }),
       );
-
-      expect(result).toBeInstanceOf(ToolMessage);
-      const contentStr =
-        typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
-      expect(contentStr).toContain('Something went wrong');
-      expect(result.artifact).toBeDefined();
-    });
-  });
-
-  describe('FluxAPI', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-      axios.post.mockResolvedValue({ data: { id: 'task-123' } });
-      axios.get.mockResolvedValue({
-        data: { status: 'Ready', result: { sample: 'https://example.com/image.png' } },
-      });
-      fetch.mockResolvedValue({
-        arrayBuffer: () => Promise.resolve(Buffer.from(FAKE_BASE64, 'base64')),
-      });
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('sets responseFormat to content_and_artifact when isAgent is true', () => {
-      const flux = new FluxAPI({ isAgent: true });
-      expect(flux.responseFormat).toBe('content_and_artifact');
-    });
-
-    it('does not set responseFormat when isAgent is false', () => {
-      const flux = new FluxAPI({ isAgent: false, processFileURL: jest.fn() });
-      expect(flux.responseFormat).not.toBe('content_and_artifact');
-    });
-
-    it('invoke() returns ToolMessage with base64 in artifact, not serialized in content', async () => {
-      const flux = new FluxAPI({ isAgent: true });
-      const invokePromise = flux.invoke(
-        makeToolCall('flux', { prompt: 'a box', endpoint: '/v1/flux-dev' }),
-      );
-      await jest.runAllTimersAsync();
-      const result = await invokePromise;
-
-      expect(result).toBeInstanceOf(ToolMessage);
-      const contentStr =
-        typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
-      expect(contentStr).not.toContain(FAKE_BASE64);
-
-      expect(result.artifact).toBeDefined();
-      const artifactContent = result.artifact?.content;
-      expect(Array.isArray(artifactContent)).toBe(true);
-      expect(artifactContent[0].type).toBe(ContentTypes.IMAGE_URL);
-      expect(artifactContent[0].image_url.url).toContain('base64');
-    });
-
-    it('invoke() returns ToolMessage with base64 in artifact for generate_finetuned action', async () => {
-      const flux = new FluxAPI({ isAgent: true });
-      const invokePromise = flux.invoke(
-        makeToolCall('flux', {
-          action: 'generate_finetuned',
-          prompt: 'a box',
-          finetune_id: 'ft-abc123',
-          endpoint: '/v1/flux-pro-finetuned',
-        }),
-      );
-      await jest.runAllTimersAsync();
-      const result = await invokePromise;
-
-      expect(result).toBeInstanceOf(ToolMessage);
-      const contentStr =
-        typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
-      expect(contentStr).not.toContain(FAKE_BASE64);
-
-      expect(result.artifact).toBeDefined();
-      const artifactContent = result.artifact?.content;
-      expect(Array.isArray(artifactContent)).toBe(true);
-      expect(artifactContent[0].type).toBe(ContentTypes.IMAGE_URL);
-      expect(artifactContent[0].image_url.url).toContain('base64');
-    });
-
-    it('invoke() returns ToolMessage with error string in content when task submission fails', async () => {
-      axios.post.mockRejectedValue(new Error('Network error'));
-
-      const flux = new FluxAPI({ isAgent: true });
-      const invokePromise = flux.invoke(
-        makeToolCall('flux', { prompt: 'a box', endpoint: '/v1/flux-dev' }),
-      );
-      await jest.runAllTimersAsync();
-      const result = await invokePromise;
 
       expect(result).toBeInstanceOf(ToolMessage);
       const contentStr =
