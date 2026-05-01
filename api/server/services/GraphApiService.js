@@ -1,10 +1,6 @@
-const client = require('openid-client');
 const { isEnabled } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
-const { CacheKeys } = require('librechat-data-provider');
 const { Client } = require('@microsoft/microsoft-graph-client');
-const { getOpenIdConfig } = require('~/strategies/openidStrategy');
-const getLogStores = require('~/cache/getLogStores');
 
 /**
  * @import { TPrincipalSearchResult, TGraphPerson, TGraphUser, TGraphGroup, TGraphPeopleResponse, TGraphUsersResponse, TGraphGroupsResponse } from 'librechat-data-provider'
@@ -27,77 +23,17 @@ const entraIdPrincipalFeatureEnabled = (user) => {
 };
 
 /**
- * Creates a Microsoft Graph client with on-behalf-of token exchange
- * @param {string} accessToken - OpenID Connect access token from user
- * @param {string} sub - Subject identifier from token claims
- * @returns {Promise<Client>} Authenticated Graph API client
+ * @returns {Promise<never>}
  */
-const createGraphClient = async (accessToken, sub) => {
-  try {
-    // Reason: Use existing OpenID configuration and token exchange pattern from openidStrategy.js
-    const openidConfig = getOpenIdConfig();
-    const exchangedToken = await exchangeTokenForGraphAccess(openidConfig, accessToken, sub);
-
-    const graphClient = Client.init({
-      authProvider: (done) => {
-        done(null, exchangedToken);
-      },
-    });
-
-    return graphClient;
-  } catch (error) {
-    logger.error('[createGraphClient] Error creating Graph client:', error);
-    throw error;
-  }
+const createGraphClient = async () => {
+  throw new Error('OpenID strategy is not available in this build');
 };
 
 /**
- * Exchange OpenID token for Graph API access using on-behalf-of flow
- * Similar to exchangeAccessTokenIfNeeded in openidStrategy.js but for Graph scopes
- * @param {Configuration} config - OpenID configuration
- * @param {string} accessToken - Original access token
- * @param {string} sub - Subject identifier
- * @returns {Promise<string>} Graph API access token
+ * @returns {Promise<never>}
  */
-const exchangeTokenForGraphAccess = async (config, accessToken, sub) => {
-  try {
-    const tokensCache = getLogStores(CacheKeys.OPENID_EXCHANGED_TOKENS);
-    const cacheKey = `${sub}:graph`;
-
-    const cachedToken = await tokensCache.get(cacheKey);
-    if (cachedToken) {
-      return cachedToken.access_token;
-    }
-
-    const graphScopes = process.env.OPENID_GRAPH_SCOPES || 'User.Read,People.Read,Group.Read.All';
-    const scopeString = graphScopes
-      .split(',')
-      .map((scope) => `https://graph.microsoft.com/${scope}`)
-      .join(' ');
-
-    const grantResponse = await client.genericGrantRequest(
-      config,
-      'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      {
-        scope: scopeString,
-        assertion: accessToken,
-        requested_token_use: 'on_behalf_of',
-      },
-    );
-
-    await tokensCache.set(
-      cacheKey,
-      {
-        access_token: grantResponse.access_token,
-      },
-      grantResponse.expires_in * 1000,
-    );
-
-    return grantResponse.access_token;
-  } catch (error) {
-    logger.error('[exchangeTokenForGraphAccess] Token exchange failed:', error);
-    throw error;
-  }
+const exchangeTokenForGraphAccess = async () => {
+  throw new Error('OpenID strategy is not available in this build');
 };
 
 /**
