@@ -43,7 +43,7 @@ const loginSchema = z.object({
 
 const registerSchema = z
   .object({
-    name: z.string().min(3).max(80),
+    name: z.string().min(1).max(80).optional(),
     username: z
       .union([z.literal(''), usernameSchema])
       .transform((value) => (value === '' ? null : value))

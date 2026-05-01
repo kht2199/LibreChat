@@ -186,7 +186,10 @@ const registerUser = async (user, additionalData = {}) => {
     return { status: 404, message: errorMessage };
   }
 
-  const { email, password, name, username, provider } = user;
+  const { email, password, provider } = user;
+  const localPart = email.split('@')[0];
+  const name = user.name || localPart.replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const username = user.username || localPart;
 
   let newUserId;
   try {
