@@ -1,0 +1,21 @@
+version: 1.2.1
+
+cache: true
+
+interface:
+  endpointSelector: false
+
+endpoints:
+  custom:
+    - name: 'My API'
+      apiKey: '${CUSTOM_API_KEY}'
+      baseURL: '${CUSTOM_API_BASE_URL}'
+      models:
+        default:
+          - 'default-model'
+        fetch: true
+      titleConvo: true
+      modelDisplayLabel: 'My API'
+
+registration:
+  socialLogins: []
